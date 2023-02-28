@@ -8,31 +8,37 @@ from hdx.freshness.database.dbdataset import DBDataset
 from hdx.freshness.database.dbresource import DBResource
 from hdx.freshness.database.dbrun import DBRun
 from hdx.utilities.dictandlist import write_list_to_csv
+from sqlalchemy import delete
 
 logger = logging.getLogger(__name__)
 
 
 class DBClean:
-    # Keep
+    # Keep daily runs up to 2 years back, weekly from 2 years to 4 years and
+    # monthly thereafter. Also keep a couple of runs around the end of each
+    # quarter.
     def __init__(self, session, now):
         self.session = session
         self.now = now
 
-    def clean(self):
-        list_run_numbers = (
+    def get_runs(self):
+        return (
             self.session.query(DBRun.run_number, DBRun.run_date)
             .distinct()
             .order_by(DBRun.run_number.desc())
             .all()
         )
+
+    def clean(self, check_enddate=True, filepath="runs.csv"):
+        list_run_numbers = self.get_runs()
         end_date = list_run_numbers[0][1]
-        if (self.now - end_date) > timedelta(days=2):
+        if check_enddate and (self.now - end_date) > timedelta(days=2):
             logger.error(
                 f"End date {end_date.isoformat()} from database is not close to current date!"
             )
-            return
-        two_years_ago = end_date - relativedelta(years=2)
-        four_years_ago = end_date - relativedelta(years=4)
+            return False
+        two_years_ago = self.now - relativedelta(years=2)
+        four_years_ago = self.now - relativedelta(years=4)
         runs_to_keep = {0, 1}
         run_date_to_run_number = {}
         run_number_to_run_date = {}
@@ -116,12 +122,19 @@ class DBClean:
                 row.append("Y")
             rows.append(row)
         write_list_to_csv(
-            "runs.csv", rows, headers=("Run Number", "Run Date", "Delete")
+            filepath, rows, headers=("Run Number", "Run Date", "Delete")
         )
 
-        # for run_number, run_date in run_number_to_run_date.items():
-        #     if run_number not in runs_to_keep:
-        #         self.session.execute(DBResource.delete().where(run_no=run_number))
-        #         self.session.execute(DBDataset.delete().where(run_no=run_number))
-        #         self.session.execute(DBRun.delete().where(run_no=run_number))
-        #         self.session.commit()
+        for run_number, run_date in run_number_to_run_date.items():
+            if run_number not in runs_to_keep:
+                self.session.execute(
+                    delete(DBResource).where(DBResource.run_number == run_number)
+                )
+                self.session.execute(
+                    delete(DBDataset).where(DBDataset.run_number == run_number)
+                )
+                self.session.execute(
+                    delete(DBRun).where(DBRun.run_number == run_number)
+                )
+                self.session.commit()
+        return True

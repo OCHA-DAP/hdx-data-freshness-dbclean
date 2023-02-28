@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class DBClone:
-    # Clone database but limit to 5 datasets per run
+    # Clone database but limit to 1 dataset and its resources per run
     def __init__(self, session):
         self.session = session
 
-    def clone(self, params={"dialect": "sqlite", "database": "freshness.db"}):
+    def clone(self, params={"dialect": "sqlite", "database": "test_freshness.db"}):
         with Database(**params) as clone_session:
             run_numbers = self.session.query(DBRun).all()
             for run_number in run_numbers:
