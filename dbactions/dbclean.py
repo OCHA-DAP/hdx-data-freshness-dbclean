@@ -39,7 +39,9 @@ class DBClean:
             .order_by(DBResource.run_number.desc())
         ).all()
 
-    def run(self, now, check_enddate=True, filepath="runs.csv"):
+    def run(
+        self, now, check_enddate=True, filepath="runs.csv", fail_on_run_difference=True
+    ):
         list_run_numbers = self.get_runs()
         end_date = list_run_numbers[0].run_date
         if check_enddate and (now - end_date) > timedelta(days=2):
@@ -49,7 +51,7 @@ class DBClean:
             return False
         dataset_run_numbers = self.get_dataset_runs()
         resource_run_numbers = self.get_resource_runs()
-        if dataset_run_numbers != resource_run_numbers:
+        if fail_on_run_difference and dataset_run_numbers != resource_run_numbers:
             s = set(resource_run_numbers)
             diff = [x for x in dataset_run_numbers if x not in s]
             logger.error(
@@ -89,8 +91,8 @@ class DBClean:
         month_dates = list(
             rrule(MONTHLY, dtstart=start_date, until=two_years_ago, bymonthday=-1)
         )
-        quarter_dates = [d for d in month_dates if d.month in (3, 6, 9, 12)]
-        quarter_dates_minus_one = [d - relativedelta(days=1) for d in quarter_dates]
+        end_quarter_dates = [d for d in month_dates if d.month in (3, 6, 9, 12)]
+        start_quarter_dates = [d + timedelta(days=1) for d in end_quarter_dates]
 
         def get_dayoffsets(n):
             day_offsets = [0]
@@ -105,20 +107,23 @@ class DBClean:
                 for day_offset in day_offsets:
                     run_date = dt + relativedelta(days=day_offset)
                     run_no = run_date_to_run_number.get(run_date.date())
-                    if (
-                        run_no is not None
-                        and run_no not in runs_to_keep
-                        and run_no in dataset_run_numbers
-                        and run_no in resource_run_numbers
-                    ):
+                    if run_no is not None and run_no not in runs_to_keep:
+                        if (
+                            run_no not in dataset_run_numbers
+                            or run_no not in resource_run_numbers
+                        ):
+                            logger.warning(
+                                f"Won't keep broken run number {run_no} with date {run_date}!"
+                            )
+                            continue
                         break
                 if run_no:
                     runs_to_keep.add(run_no)
 
         keep_runs(week_dates, day_offsets=get_dayoffsets(2))
         keep_runs(month_dates, day_offsets=get_dayoffsets(7))
-        keep_runs(quarter_dates, day_offsets=get_dayoffsets(14))
-        keep_runs(quarter_dates_minus_one, day_offsets=get_dayoffsets(14))
+        keep_runs(start_quarter_dates, day_offsets=get_dayoffsets(14))
+        keep_runs(end_quarter_dates, day_offsets=get_dayoffsets(14))
 
         def to_ranges(iterable):
             iterable = sorted(set(iterable))
