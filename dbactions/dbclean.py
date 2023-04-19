@@ -66,6 +66,10 @@ class DBClean:
         overaday = timedelta(days=1, hours=12)
         for run_number in list_run_numbers:
             run_no = run_number.run_number
+            if run_no not in dataset_run_numbers or run_no not in resource_run_numbers:
+                logger.warning(
+                    f"Run number {run_number} with date {run_date} is probably broken!"
+                )
             previous_run_date = run_date
             run_date = run_number.run_date
             if previous_run_date and (previous_run_date - run_date) > overaday:
@@ -101,7 +105,12 @@ class DBClean:
                 for day_offset in day_offsets:
                     run_date = dt + relativedelta(days=day_offset)
                     run_no = run_date_to_run_number.get(run_date.date())
-                    if run_no is not None and run_no not in runs_to_keep:
+                    if (
+                        run_no is not None
+                        and run_no not in runs_to_keep
+                        and run_no in dataset_run_numbers
+                        and run_no in resource_run_numbers
+                    ):
                         break
                 if run_no:
                     runs_to_keep.add(run_no)
