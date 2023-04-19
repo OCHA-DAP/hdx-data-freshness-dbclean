@@ -6,7 +6,16 @@ This script cleans the freshness database.
 
 ### Usage
 
-    python run.py [--db_url=] [--db_params=] [action]
+    python run.py [-db/--db_url=] [-dp/--db_params=] [action]
+
+Either db_url or db_params must be provided or the environment variable DB_URL
+must be set. db_url or DB_URL are of form: 
+postgresql+psycopg://user:password@host:port/database
+
+db_params is of form:
+database=XXX,host=X.X.X.X,username=XXX,password=XXX,port=1234,
+ssh_host=X.X.X.X,ssh_port=1234,ssh_username=XXX,
+ssh_private_key=/home/XXX/.ssh/keyfile
 
 action: 
 
@@ -14,7 +23,8 @@ action:
 has all the runs and one dataset and its resources per run for testing 
 purposes.
 
-- "clean" cleans the database by removing runs according to these rules:
+- "clean" (the default) cleans the database by removing runs according to these 
+rules:
   1. Keep a handful of runs around the end of each quarter all the way back to 
   the first run in 2017
   2. Keep daily runs going back 2 years
