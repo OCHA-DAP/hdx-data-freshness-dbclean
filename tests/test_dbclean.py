@@ -3,6 +3,11 @@ from os.path import join
 from shutil import copyfile
 
 import pytest
+from hdx.freshness.database.dbdataset import DBDataset
+from hdx.freshness.database.dbresource import DBResource
+from hdx.freshness.database.dbrun import DBRun
+from sqlalchemy import select
+
 from dbclean import DBClean
 from hdx.database import Database
 from hdx.utilities.compare import assert_files_same
@@ -31,80 +36,37 @@ class TestDBClean:
             "test_dbclean", delete_on_success=True, delete_on_failure=False
         ) as folder:
             with Database(**database) as session:
-                runs_file = "runs.csv"
-                expected_runs = join(fixtures, runs_file)
-                actual_runs = join(folder, runs_file)
-                now = parse_date("2023-02-27")
-                cleaner = DBClean(session, now)
-                starting_runs = cleaner.get_runs()
-                assert len(starting_runs) == 2072
-                success = cleaner.clean(filepath=actual_runs)
-                assert success is True
-                runs = cleaner.get_runs()
-                assert len(runs) == 898
-                assert_files_same(actual_runs, expected_runs)
+                cleaner = DBClean(session)
 
-                runs_file = "runs2.csv"
-                expected_runs = join(fixtures, runs_file)
-                actual_runs = join(folder, runs_file)
-                now = parse_date("2023-02-28")
-                cleaner = DBClean(session, now)
-                starting_runs = cleaner.get_runs()
-                assert len(starting_runs) == 898
-                success = cleaner.clean(filepath=actual_runs)
-                assert success is True
-                runs = cleaner.get_runs()
-                assert len(runs) == 897
-                assert_files_same(actual_runs, expected_runs)
+                def check_results(
+                    runs_file,
+                    date_str,
+                    exp_starting_runs,
+                    exp_runs=None,
+                    exp_success=True,
+                    check_enddate=True,
+                ):
+                    expected_runs = join(fixtures, runs_file)
+                    actual_runs = join(folder, runs_file)
+                    starting_runs = cleaner.get_runs()
+                    assert len(starting_runs) == exp_starting_runs
 
-                runs_file = "runs3.csv"
-                expected_runs = join(fixtures, runs_file)
-                actual_runs = join(folder, runs_file)
-                now = parse_date("2023-03-01")
-                cleaner = DBClean(session, now)
-                starting_runs = cleaner.get_runs()
-                assert len(starting_runs) == 897
-                success = cleaner.clean(filepath=actual_runs)
-                assert success is True
-                runs = cleaner.get_runs()
-                assert len(runs) == 897
-                assert_files_same(actual_runs, expected_runs)
+                    now = parse_date(date_str)
+                    success = cleaner.clean(now,
+                        check_enddate=check_enddate, filepath=actual_runs
+                    )
+                    assert success is exp_success
+                    if not success:
+                        return
+                    runs = cleaner.get_runs()
+                    assert len(runs) == exp_runs
+                    assert_files_same(actual_runs, expected_runs)
 
-                now = parse_date("2023-03-06")
-                cleaner = DBClean(session, now)
-                starting_runs = cleaner.get_runs()
-                assert len(starting_runs) == 897
-                success = cleaner.clean(filepath=actual_runs)
-                assert success is False
+                check_results("runs.csv", "2023-02-27", 2072, 898)
+                check_results("runs2.csv", "2023-02-28", 898, 897)
+                check_results("runs3.csv", "2023-03-01", 897, 897)
+                check_results("runs3.csv", "2023-03-06", 897, exp_success=False)
+                check_results("runs3.csv", "2023-03-06", 897, 897, check_enddate=False)
+                check_results("runs4.csv", "2023-03-07", 897, 895, check_enddate=False)
+                check_results("runs5.csv", "2023-04-01", 895, 874, check_enddate=False)
 
-                success = cleaner.clean(check_enddate=False, filepath=actual_runs)
-                assert success is True
-                runs = cleaner.get_runs()
-                assert len(runs) == 897
-                assert_files_same(actual_runs, expected_runs)
-
-                runs_file = "runs4.csv"
-                expected_runs = join(fixtures, runs_file)
-                actual_runs = join(folder, runs_file)
-                now = parse_date("2023-03-07")
-                cleaner = DBClean(session, now)
-                starting_runs = cleaner.get_runs()
-                assert len(starting_runs) == 897
-                success = cleaner.clean(check_enddate=False, filepath=actual_runs)
-                assert success is True
-                runs = cleaner.get_runs()
-                assert len(runs) == 895
-                assert_files_same(actual_runs, expected_runs)
-
-                runs_file = "runs5.csv"
-                expected_runs = join(fixtures, runs_file)
-                actual_runs = join(folder, runs_file)
-                now = parse_date("2023-04-01")
-                cleaner = DBClean(session, now)
-                starting_runs = cleaner.get_runs()
-                assert len(starting_runs) == 895
-                success = cleaner.clean(check_enddate=False, filepath=actual_runs)
-                assert success is True
-                runs = cleaner.get_runs()
-                assert len(runs) == 874
-                assert_files_same(actual_runs, expected_runs)

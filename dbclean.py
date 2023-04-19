@@ -8,7 +8,7 @@ from hdx.freshness.database.dbdataset import DBDataset
 from hdx.freshness.database.dbresource import DBResource
 from hdx.freshness.database.dbrun import DBRun
 from hdx.utilities.dictandlist import write_list_to_csv
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 logger = logging.getLogger(__name__)
 
@@ -17,28 +17,59 @@ class DBClean:
     # Keep daily runs up to 2 years back, weekly from 2 years to 4 years and
     # monthly thereafter. Also keep a couple of runs around the end of each
     # quarter.
-    def __init__(self, session, now):
+    def __init__(self, session):
         self.session = session
-        self.now = now
 
     def get_runs(self):
         return (
-            self.session.query(DBRun.run_number, DBRun.run_date)
-            .distinct()
-            .order_by(DBRun.run_number.desc())
+            self.session.scalars(
+                select(DBRun)
+                .distinct()
+                .order_by(DBRun.run_number.desc())
+            )
             .all()
         )
 
-    def clean(self, check_enddate=True, filepath="runs.csv"):
+    def get_dataset_runs(self):
+        return (
+            self.session.scalars(
+                select(DBDataset.run_number)
+                .distinct()
+                .order_by(DBDataset.run_number.desc())
+            )
+            .all()
+        )
+
+    def get_resource_runs(self):
+        return (
+            self.session.scalars(
+                select(DBResource.run_number)
+                .distinct()
+                .order_by(DBResource.run_number.desc())
+            )
+            .all()
+        )
+
+    def clean(self, now, check_enddate=True, filepath="runs.csv"):
         list_run_numbers = self.get_runs()
-        end_date = list_run_numbers[0][1]
-        if check_enddate and (self.now - end_date) > timedelta(days=2):
+        end_date = list_run_numbers[0].run_date
+        if check_enddate and (now - end_date) > timedelta(days=2):
             logger.error(
                 f"End date {end_date.isoformat()} from database is not close to current date!"
             )
             return False
-        two_years_ago = self.now - relativedelta(years=2)
-        four_years_ago = self.now - relativedelta(years=4)
+        dataset_run_numbers = self.get_dataset_runs()
+        resource_run_numbers = self.get_resource_runs()
+        if dataset_run_numbers != resource_run_numbers:
+            s = set(resource_run_numbers)
+            diff = [x for x in dataset_run_numbers if x not in s]
+            logger.error(
+                f"Dataset and resource run numbers do not match! Differences: {diff}"
+            )
+            return False
+
+        two_years_ago = now - relativedelta(years=2)
+        four_years_ago = now - relativedelta(years=4)
         runs_to_keep = {0, 1}
         run_date_to_run_number = {}
         run_number_to_run_date = {}
@@ -61,7 +92,7 @@ class DBClean:
         week_dates = rrule(
             WEEKLY, dtstart=four_years_ago, until=two_years_ago, byweekday=WE
         )
-        start_date = list_run_numbers[-1][1]
+        start_date = list_run_numbers[-1].run_date
         month_dates = list(
             rrule(MONTHLY, dtstart=start_date, until=two_years_ago, bymonthday=-1)
         )
@@ -121,9 +152,7 @@ class DBClean:
             else:
                 row.append("Y")
             rows.append(row)
-        write_list_to_csv(
-            filepath, rows, headers=("Run Number", "Run Date", "Delete")
-        )
+        write_list_to_csv(filepath, rows, headers=("Run Number", "Run Date", "Delete"))
 
         for run_number, run_date in run_number_to_run_date.items():
             if run_number not in runs_to_keep:
