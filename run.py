@@ -5,8 +5,8 @@ import logging
 from os import getenv
 from typing import Optional
 
-from dbclean import DBClean
-from dbclone import DBClone
+from dbactions.dbclean import DBClean
+from dbactions.dbclone import DBClone
 from hdx.database import Database
 from hdx.utilities.dateparse import now_utc
 from hdx.utilities.dictandlist import args_to_dict
@@ -44,11 +44,11 @@ def main(
         now = now_utc()
         if action == "clean":
             cleaner = DBClean(session, now)
-            cleaner.clean()
+            cleaner.run()
             logger.info("Freshness database clean completed!")
         elif action == "clone":
             cloner = DBClone(session)
-            cloner.clone()
+            cloner.run()
             logger.info("Freshness database clone completed!")
 
 

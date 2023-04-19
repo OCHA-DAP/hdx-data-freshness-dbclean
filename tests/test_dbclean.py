@@ -3,12 +3,7 @@ from os.path import join
 from shutil import copyfile
 
 import pytest
-from hdx.freshness.database.dbdataset import DBDataset
-from hdx.freshness.database.dbresource import DBResource
-from hdx.freshness.database.dbrun import DBRun
-from sqlalchemy import select
-
-from dbclean import DBClean
+from dbactions.dbclean import DBClean
 from hdx.database import Database
 from hdx.utilities.compare import assert_files_same
 from hdx.utilities.dateparse import parse_date
@@ -52,8 +47,8 @@ class TestDBClean:
                     assert len(starting_runs) == exp_starting_runs
 
                     now = parse_date(date_str)
-                    success = cleaner.clean(now,
-                        check_enddate=check_enddate, filepath=actual_runs
+                    success = cleaner.run(
+                        now, check_enddate=check_enddate, filepath=actual_runs
                     )
                     assert success is exp_success
                     if not success:
@@ -69,4 +64,3 @@ class TestDBClean:
                 check_results("runs3.csv", "2023-03-06", 897, 897, check_enddate=False)
                 check_results("runs4.csv", "2023-03-07", 897, 895, check_enddate=False)
                 check_results("runs5.csv", "2023-04-01", 895, 874, check_enddate=False)
-

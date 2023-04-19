@@ -21,36 +21,25 @@ class DBClean:
         self.session = session
 
     def get_runs(self):
-        return (
-            self.session.scalars(
-                select(DBRun)
-                .distinct()
-                .order_by(DBRun.run_number.desc())
-            )
-            .all()
-        )
+        return self.session.scalars(
+            select(DBRun).distinct().order_by(DBRun.run_number.desc())
+        ).all()
 
     def get_dataset_runs(self):
-        return (
-            self.session.scalars(
-                select(DBDataset.run_number)
-                .distinct()
-                .order_by(DBDataset.run_number.desc())
-            )
-            .all()
-        )
+        return self.session.scalars(
+            select(DBDataset.run_number)
+            .distinct()
+            .order_by(DBDataset.run_number.desc())
+        ).all()
 
     def get_resource_runs(self):
-        return (
-            self.session.scalars(
-                select(DBResource.run_number)
-                .distinct()
-                .order_by(DBResource.run_number.desc())
-            )
-            .all()
-        )
+        return self.session.scalars(
+            select(DBResource.run_number)
+            .distinct()
+            .order_by(DBResource.run_number.desc())
+        ).all()
 
-    def clean(self, now, check_enddate=True, filepath="runs.csv"):
+    def run(self, now, check_enddate=True, filepath="runs.csv"):
         list_run_numbers = self.get_runs()
         end_date = list_run_numbers[0].run_date
         if check_enddate and (now - end_date) > timedelta(days=2):
