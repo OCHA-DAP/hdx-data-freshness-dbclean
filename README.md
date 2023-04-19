@@ -6,7 +6,7 @@ This script cleans the freshness database.
 
 ### Usage
 
-    python run.py [--db_url=] [-db_params] [action]
+    python run.py [--db_url=] [--db_params=] [action]
 
 action: 
 
