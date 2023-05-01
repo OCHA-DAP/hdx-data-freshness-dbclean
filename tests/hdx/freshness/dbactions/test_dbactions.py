@@ -3,11 +3,12 @@ from os.path import join
 from shutil import copyfile
 
 import pytest
-from dbactions.dbclean import DBClean
 from hdx.database import Database
 from hdx.utilities.compare import assert_files_same
 from hdx.utilities.dateparse import parse_date
 from hdx.utilities.path import temp_dir
+
+from hdx.freshness.dbactions.dbclean import DBClean
 
 
 class TestDBClean:
@@ -68,16 +69,29 @@ class TestDBClean:
 
     def test_clean(self, database):
         with temp_dir(
-            "test_dbclean_clean", delete_on_success=True, delete_on_failure=False
+            "test_dbclean_clean",
+            delete_on_success=True,
+            delete_on_failure=False,
         ) as folder:
             with Database(**database) as session:
                 cleaner = DBClean(session)
 
-                self.check_results(folder, cleaner, "runs.csv", "2023-02-27", 2072, 898)
-                self.check_results(folder, cleaner, "runs2.csv", "2023-02-28", 898, 897)
-                self.check_results(folder, cleaner, "runs3.csv", "2023-03-01", 897, 897)
                 self.check_results(
-                    folder, cleaner, "runs3.csv", "2023-03-06", 897, exp_success=False
+                    folder, cleaner, "runs.csv", "2023-02-27", 2072, 898
+                )
+                self.check_results(
+                    folder, cleaner, "runs2.csv", "2023-02-28", 898, 897
+                )
+                self.check_results(
+                    folder, cleaner, "runs3.csv", "2023-03-01", 897, 897
+                )
+                self.check_results(
+                    folder,
+                    cleaner,
+                    "runs3.csv",
+                    "2023-03-06",
+                    897,
+                    exp_success=False,
                 )
                 self.check_results(
                     folder,
@@ -109,13 +123,20 @@ class TestDBClean:
 
     def test_broken_run(self, database_brokenrun1351):
         with temp_dir(
-            "test_dbclean_broken_run", delete_on_success=True, delete_on_failure=False
+            "test_dbclean_broken_run",
+            delete_on_success=True,
+            delete_on_failure=False,
         ) as folder:
             with Database(**database_brokenrun1351) as session:
                 cleaner = DBClean(session)
 
                 self.check_results(
-                    folder, cleaner, "runs.csv", "2023-02-27", 2072, exp_success=False
+                    folder,
+                    cleaner,
+                    "runs.csv",
+                    "2023-02-27",
+                    2072,
+                    exp_success=False,
                 )
                 self.check_results(
                     folder,

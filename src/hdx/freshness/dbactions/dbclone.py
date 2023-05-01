@@ -13,7 +13,9 @@ class DBClone:
     def __init__(self, session):
         self.session = session
 
-    def run(self, params={"dialect": "sqlite", "database": "test_freshness.db"}):
+    def run(
+        self, params={"dialect": "sqlite", "database": "test_freshness.db"}
+    ):
         with Database(**params) as clone_session:
             run_numbers = self.session.query(DBRun).all()
             for run_number in run_numbers:
@@ -21,7 +23,9 @@ class DBClone:
                 run_no = run_number.run_number
                 logger.info(f"Adding run {run_no}")
                 dbdataset = (
-                    self.session.query(DBDataset).filter_by(run_number=run_no).first()
+                    self.session.query(DBDataset)
+                    .filter_by(run_number=run_no)
+                    .first()
                 )
                 if not dbdataset:
                     logger.info(f"No datasets in run {run_no}")

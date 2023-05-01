@@ -5,19 +5,22 @@ import logging
 from os import getenv
 from typing import Optional
 
-from dbactions.dbclean import DBClean
-from dbactions.dbclone import DBClone
 from hdx.database import Database
 from hdx.utilities.dateparse import now_utc
 from hdx.utilities.dictandlist import args_to_dict
 from hdx.utilities.easy_logging import setup_logging
+
+from .dbclean import DBClean
+from .dbclone import DBClone
 
 setup_logging()
 logger = logging.getLogger(__name__)
 
 
 def main(
-    db_url: Optional[str] = None, db_params: Optional[str] = None, action: str = "clean"
+    db_url: Optional[str] = None,
+    db_params: Optional[str] = None,
+    action: str = "clean",
 ) -> None:
     """Run freshness database cleaner. Either a database connection string (db_url) or database
     connection parameters (db_params) can be supplied. If neither is supplied, a local
@@ -53,7 +56,9 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Data Freshness Database Clean")
+    parser = argparse.ArgumentParser(
+        description="Data Freshness Database Clean"
+    )
     parser.add_argument(
         "-db", "--db_url", default=None, help="Database connection string"
     )
