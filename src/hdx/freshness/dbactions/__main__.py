@@ -11,6 +11,7 @@ from hdx.utilities.dateparse import now_utc
 from hdx.utilities.dictandlist import args_to_dict
 from hdx.utilities.easy_logging import setup_logging
 
+from . import __version__
 from .dbclean import DBClean
 from .dbclone import DBClone
 
@@ -37,7 +38,7 @@ def main(
         None
     """
 
-    logger.info(f"> Data freshness database clean 1.0")
+    logger.info(f"> Data freshness database clean {__version__}")
     if db_params:  # Get freshness database server details
         params = args_to_dict(db_params)
     elif db_uri:
