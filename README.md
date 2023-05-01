@@ -14,12 +14,12 @@ This script cleans the freshness database.
 
 Either db_uri or db_params must be provided or the environment variable DB_URI
 must be set. db_uri or DB_URI are of form: 
-postgresql+psycopg://user:password@host:port/database
+`postgresql+psycopg://user:password@host:port/database`
 
 db_params is of form:
-database=XXX,host=X.X.X.X,username=XXX,password=XXX,port=1234,
+`database=XXX,host=X.X.X.X,username=XXX,password=XXX,port=1234,
 ssh_host=X.X.X.X,ssh_port=1234,ssh_username=XXX,
-ssh_private_key=/home/XXX/.ssh/keyfile
+ssh_private_key=/home/XXX/.ssh/keyfile`
 
 action: 
 
