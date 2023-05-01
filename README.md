@@ -1,5 +1,9 @@
 ### Utility to clean Freshness Database
-[![Build Status](https://github.com/OCHA-DAP/hdx-data-freshness-dbclean/actions/workflows/run-python-tests.yml/badge.svg)](https://github.com/OCHA-DAP/hdx-data-freshness-dbclean/actions/workflows/run-python-tests.yml) [![Coverage Status](https://coveralls.io/repos/github/OCHA-DAP/hdx-data-freshness-dbclean/badge.svg?branch=main&ts=1)](https://coveralls.io/github/OCHA-DAP/hdx-data-freshness-dbclean?branch=main)
+[![Build Status](https://github.com/OCHA-DAP/hdx-data-freshness-dbclean/actions/workflows/run-python-tests.yml/badge.svg)](https://github.com/OCHA-DAP/hdx-data-freshness-dbclean/actions/workflows/run-python-tests.yml)
+[![Coverage Status](https://codecov.io/gh/OCHA-DAP/hdx-data-freshness-dbclean/branch/main/graph/badge.svg?token=JpWZc5js4y)](https://codecov.io/gh/OCHA-DAP/hdx-data-freshness-dbclean)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+
 
 This script cleans the freshness database.
 
