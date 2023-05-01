@@ -10,10 +10,10 @@ This script cleans the freshness database.
 
 ### Usage
 
-    python run.py [-db/--db_url=] [-dp/--db_params=] [action]
+    python -m hdx.freshness.dbactions [-db/--db_uri=] [-dp/--db_params=] [action]
 
-Either db_url or db_params must be provided or the environment variable DB_URL
-must be set. db_url or DB_URL are of form: 
+Either db_uri or db_params must be provided or the environment variable DB_URI
+must be set. db_uri or DB_URI are of form: 
 postgresql+psycopg://user:password@host:port/database
 
 db_params is of form:
