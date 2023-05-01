@@ -49,8 +49,8 @@ def main(
     with Database(**params) as session:
         now = now_utc()
         if action == "clean":
-            cleaner = DBClean(session, now)
-            cleaner.run()
+            cleaner = DBClean(session)
+            cleaner.run(now)
             logger.info("Freshness database clean completed!")
         elif action == "clone":
             cloner = DBClone(session)
